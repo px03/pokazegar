@@ -6,6 +6,13 @@
     <title>PokażZegar</title>
     <meta name="description" content="Pokaż czytelny zegar swojego urządzenia na całym ekranie.">
     <meta name="theme-color" content="#121212">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="PokażZegar">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <style>
         *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',sans-serif;transition:background-color .3s,color .3s,border-color .3s}
         body{background-color:#121212;color:#fff;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
@@ -30,6 +37,13 @@
         body.theme-white .preview-screen{border-color:#ccc}
         .preview-screen.bg-black{background-color:#000}
         .preview-screen.bg-white{background-color:#fff}
+        .opt-row{display:grid;grid-template-columns:.9fr 1.1fr;gap:12px}
+        .opt-row .checkbox-option{min-width:0;margin-bottom:0;gap:8px;font-size:.95rem;line-height:1.2}
+        .opt-row.nowrap .checkbox-option{white-space:nowrap}
+        @media(max-width:379px){.opt-row.nowrap .checkbox-option{white-space:normal}}
+        @media(min-width:768px){.opt-row{grid-template-columns:230px 1fr;gap:32px}.opt-row .checkbox-option{font-size:1.1rem;gap:12px}}
+        .opt-hint{font-size:.85rem;color:#888;margin-left:34px;line-height:1.3}
+        body.theme-white .opt-hint{color:#777}
         .size-row{display:flex;align-items:center;gap:12px;margin-top:10px}
         .size-row label{margin:0;font-size:.95rem;font-weight:600}
         .size-row input[type="range"]{height:6px}
@@ -69,6 +83,9 @@
         button.reset-btn:hover{background-color:#2a2a2a;color:#aaa}
         body.theme-white button.reset-btn:hover{background-color:#f9f9f9;color:#555}
 
+        .section-divider{display:none;border:none;border-top:1px solid #444;margin:16px 0}
+        body.theme-white .section-divider{border-top-color:#ccc}
+
         .slot-row{display:flex;gap:10px;margin-top:10px}
         .slot-row button{border:none;color:#fff;font-weight:bold;font-size:1.1rem;cursor:pointer;transition:background .2s,transform .1s}
         button.slot-save{flex:0 0 34%;background:#4da6ff;border-radius:8px;padding:14px 6px;white-space:nowrap}
@@ -79,6 +96,7 @@
         .slot-arrow{flex:0 0 46px;font-size:1.5rem;line-height:1}
         .slot-load-btn{flex:1;white-space:nowrap}
         .slot-load-btn.empty{opacity:.75}
+        @media(max-width:379px){button.slot-save{flex-basis:30%}.slot-arrow{flex-basis:38px}.slot-row button{font-size:1rem}}
         @media(hover:hover){
             button.slot-save:hover{background:#3385ff}
             .slot-load button:hover{background:rgba(0,0,0,.12)}
@@ -147,7 +165,7 @@
         .screen-controls-left.collapsed .left-panel{display:none}
         .left-panel{width:170px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.3);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;gap:8px;color:#ddd;font-size:.7rem;user-select:none}
         @media(min-width:768px){.left-panel{width:230px;font-size:.8rem}}
-        .lp-checks{display:flex;gap:14px}
+        .lp-checks{display:flex;flex-wrap:wrap;gap:6px 14px}
         .lp-check{display:flex;align-items:center;gap:5px;cursor:pointer}
         .lp-check input{width:16px;height:16px;min-width:16px;margin:0}
         @media(min-width:768px){.lp-check input{width:18px;height:18px;min-width:18px}}
@@ -228,7 +246,7 @@
                 <span class="accordion-arrow">▼</span>
             </button>
             <div class="accordion-body" id="more-body">
-                <div class="form-group">
+                <div class="form-group" style="margin-bottom:12px;">
                     <label>Wybierz kolor tła zegara:</label>
                     <div class="radio-group">
                         <label class="radio-option"><input type="radio" name="bg-color" value="black" checked onchange="updateTheme()"> Czarne</label>
@@ -236,21 +254,33 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="checkbox-option" style="margin-bottom:16px;"><input type="checkbox" id="show-date"> Pokaż datę</label>
-                    <label class="checkbox-option" style="margin-bottom:16px;"><input type="checkbox" id="show-seconds" checked> Pokaż sekundy</label>
+                <div class="form-group" style="margin-bottom:12px;">
+                    <div class="opt-row nowrap">
+                        <label class="checkbox-option"><input type="checkbox" id="show-date"> Pokaż datę</label>
+                        <label class="checkbox-option"><input type="checkbox" id="show-seconds" checked> Pokaż sekundy</label>
+                    </div>
+                    <div class="opt-row" style="margin-top:16px;">
+                        <label class="checkbox-option"><input type="checkbox" id="keep-awake" checked onchange="onKeepAwakeChange()"> Ekran stale włączony</label>
+                        <label class="checkbox-option"><input type="checkbox" id="oled-shift" checked onchange="onOledChange()"> Ochrona OLED</label>
+                    </div>
+                    <div class="opt-hint" style="margin:8px 0 0;">Ochrona OLED – co kilka minut lekko przesuwa zegar, żeby nie wypalić ekranu.</div>
+                    <div class="opt-hint" id="keep-awake-hint" style="display:none;margin:4px 0 0;"></div>
+                </div>
+
+                <div class="form-group" style="margin-bottom:12px;">
                     <label class="checkbox-option" style="margin-bottom:0;"><input type="checkbox" id="blink-on" onchange="toggleBlinkOptions()"> Włącz mruganie zegara</label>
-                    <div id="blink-options" style="display:none;margin-top:20px;">
+                    <div id="blink-options" style="display:none;margin-top:14px;">
                         <label for="speed-slider">Szybkość zmiany kolorów:</label>
                         <div class="slider-container"><input type="range" id="speed-slider" min="0.1" max="2" step="0.1" value="0.5"></div>
                         <div class="slider-labels"><span>Wolno</span><span>Szybko</span></div>
-                        <label class="checkbox-option" style="margin-top:20px;margin-bottom:0;"><input type="checkbox" id="anim-gradient" onchange="toggleColorMode()"> Animowany gradient</label>
+                        <label class="checkbox-option" style="margin-top:14px;margin-bottom:0;"><input type="checkbox" id="anim-gradient" onchange="toggleColorMode()"> Animowany gradient</label>
                         <div class="grad-choices" id="grad-choices">
                             <button type="button" class="grad-choice" onclick="selectGradient(0)"></button>
                             <button type="button" class="grad-choice" onclick="selectGradient(1)"></button>
                             <button type="button" class="grad-choice" onclick="selectGradient(2)"></button>
                         </div>
                     </div>
+                    <hr class="section-divider" id="blink-divider">
                 </div>
 
                 <div class="form-group" style="margin-bottom:0;">
@@ -340,6 +370,7 @@
                 <div class="lp-checks">
                     <div class="lp-check" onclick="lpToggle(event,'d-date')"><input type="checkbox" id="d-date" onchange="onDispToggle()"><span>Data</span></div>
                     <div class="lp-check" onclick="lpToggle(event,'d-secs')"><input type="checkbox" id="d-secs" onchange="onDispToggle()"><span>Sekundy</span></div>
+                    <div class="lp-check" onclick="lpToggle(event,'d-oled')"><input type="checkbox" id="d-oled" onchange="onDispOled()"><span>Ochrona OLED</span></div>
                 </div>
                 <div class="lp-row"><span>Jasność zegara</span><input type="range" id="d-bright" min="10" max="100" step="1" oninput="onDispBright()"></div>
                 <div class="lp-row"><span>Wielkość</span><input type="range" id="d-size" min="10" max="100" step="1" oninput="onDispSize()"></div>
@@ -350,7 +381,7 @@
 
     <script>
         const getEl = id => document.getElementById(id);
-        const DEFAULTS = {bgColor:'black', size:55, brightness:100, type:'digital', roman:false, showDate:false, showSeconds:true, blink:false, speed:0.5, autoContrast:true, confirmedColor:'#ff0000', animGradient:false, animGradIdx:0};
+        const DEFAULTS = {bgColor:'black', size:55, brightness:100, oled:true, type:'digital', roman:false, showDate:false, showSeconds:true, blink:false, speed:0.5, autoContrast:true, confirmedColor:'#ff0000', animGradient:false, animGradIdx:0};
         let roman = false;
         let tempColor = '#ff0000';
         let confirmedColor = '#ff0000';
@@ -529,401 +560,4 @@
 
         function syncDispControls() {
             getEl('d-date').checked = getEl('show-date').checked;
-            getEl('d-secs').checked = getEl('show-seconds').checked;
-            getEl('d-bright').value = getEl('bright-slider').value;
-            getEl('d-size').value = getEl('size-slider').value;
-        }
-
-        // zmiana jasności na stronie głównej (lub wczytanie ustawień)
-        function onBrightChange() {
-            applyBrightness();
-            if (getEl('display-screen').style.display === 'flex') syncDispControls();
-        }
-
-        // zmiany z menu na ekranie zegara
-        function lpToggle(e, id) {
-            if (e.target.id !== id) { const c = getEl(id); c.checked = !c.checked; onDispToggle(); }
-        }
-        function onDispToggle() {
-            getEl('show-date').checked = getEl('d-date').checked;
-            getEl('show-seconds').checked = getEl('d-secs').checked;
-            rebuildDisplay();
-            schedulePreview();
-            startLeftTimer(10000);
-        }
-        function onDispBright() {
-            getEl('bright-slider').value = getEl('d-bright').value;
-            applyBrightness();
-            startLeftTimer(10000);
-        }
-        function onDispSize() {
-            getEl('size-slider').value = getEl('d-size').value;
-            rebuildDisplay();
-            schedulePreview();
-            startLeftTimer(10000);
-        }
-
-        let hideLeftTimer = null;
-        function startLeftTimer(duration) {
-            clearTimeout(hideLeftTimer);
-            hideLeftTimer = setTimeout(() => {
-                getEl('screen-controls-left').classList.add('collapsed');
-                getEl('arrow-toggle-left').textContent = '›';
-            }, duration);
-        }
-        function toggleControlsLeft() {
-            const c = getEl('screen-controls-left'), arrow = getEl('arrow-toggle-left');
-            if (c.classList.contains('collapsed')) {
-                c.classList.remove('collapsed');
-                arrow.textContent = '‹';
-                startLeftTimer(10000);
-            } else {
-                c.classList.add('collapsed');
-                arrow.textContent = '›';
-                clearTimeout(hideLeftTimer);
-            }
-        }
-
-        function rebuildDisplay() {
-            const cfg = cfgFromUI();
-            Object.assign(cfg, {W: window.innerWidth, H: window.innerHeight, s: 1, now: new Date()});
-            displayUpd = buildClock(getEl('display-root'), cfg);
-        }
-
-        function onTypeChange() {
-            const analog = document.querySelector('input[name="clock-type"]:checked').value === 'analog';
-            getEl('numeral-picker').style.display = analog ? 'flex' : 'none';
-            schedulePreview();
-        }
-
-        function toggleNumerals() {
-            roman = !roman;
-            getEl('numeral-label').textContent = roman ? 'Cyfry rzymskie' : 'Cyfry arabskie';
-            schedulePreview();
-        }
-
-        // ---------- Ustawienia ----------
-        const updateTheme = () => {
-            const white = document.querySelector('input[name="bg-color"]:checked').value === 'white';
-            document.body.className = white ? 'theme-white' : 'theme-black';
-            const meta = document.querySelector('meta[name="theme-color"]');
-            if (meta) meta.setAttribute('content', white ? '#f0f2f5' : '#121212');
-        };
-
-        function toggleMore() {
-            getEl('more-toggle').classList.toggle('open');
-            getEl('more-body').classList.toggle('open');
-        }
-
-        function toggleBlinkOptions() {
-            getEl('blink-options').style.display = getEl('blink-on').checked ? 'block' : 'none';
-            toggleColorMode();
-        }
-
-        const ANIM_GRADS = [
-            'linear-gradient(90deg,#ff0000,#ffff00,#00ff00,#00ffff,#4d4dff,#ff00ff,#ff0000)',
-            'linear-gradient(90deg,#ff0000,#ff8000,#ffee00,#ff8000,#ff0000)',
-            'linear-gradient(90deg,#00ffff,#4da6ff,#ff00ff,#4da6ff,#00ffff)'
-        ];
-
-        function toggleColorMode() {
-            const auto = getEl('auto-contrast-color').checked;
-            const blink = getEl('blink-on').checked;
-            const anim = getEl('anim-gradient').checked;
-            const off = auto || blink;
-            const btn = getEl('color-preview-btn'), lbl = getEl('color-picker-label');
-            btn.style.opacity = lbl.style.opacity = off ? '0.4' : '1';
-            btn.style.pointerEvents = lbl.style.pointerEvents = off ? 'none' : 'auto';
-            const autoLbl = getEl('auto-contrast-color').parentElement;
-            autoLbl.style.opacity = blink ? '0.4' : '1';
-            autoLbl.style.pointerEvents = blink ? 'none' : 'auto';
-            getEl('grad-choices').style.display = (blink && anim) ? 'flex' : 'none';
-            document.querySelectorAll('.grad-choice').forEach((el, i) => {
-                el.style.background = ANIM_GRADS[i];
-                el.classList.toggle('selected', i === animGradIdx);
-            });
-            schedulePreview();
-        }
-
-        function selectGradient(i) { animGradIdx = i; toggleColorMode(); }
-
-        // ---------- Okno wyboru koloru ----------
-        const SAVED_KEY = 'pokaz_zegar_customcolors';
-        let customTouched = false;
-        let savedColors = [];
-        try { savedColors = JSON.parse(localStorage.getItem(SAVED_KEY) || '[]').slice(0, 3); } catch (e) { savedColors = []; }
-
-        function setSwatch(el, val) { el.style.background = val; }
-
-        function renderSavedColors() {
-            const box = getEl('saved-colors');
-            box.innerHTML = '';
-            savedColors.forEach(hex => {
-                const b = document.createElement('button');
-                b.className = 'saved-color';
-                b.style.background = hex;
-                b.onclick = () => pickColor(hex);
-                box.appendChild(b);
-            });
-        }
-
-        function openColorModal() {
-            if (getEl('auto-contrast-color').checked || getEl('blink-on').checked) return;
-            tempColor = confirmedColor;
-            customTouched = false;
-            renderSavedColors();
-            updateModalSamples(tempColor);
-            switchToPalette();
-            getEl('color-modal-overlay').style.display = 'flex';
-        }
-
-        function closeColorModal() { getEl('color-modal-overlay').style.display = 'none'; }
-        function confirmColorModal() {
-            confirmedColor = tempColor;
-            setSwatch(getEl('color-preview-btn'), confirmedColor);
-            if (customTouched) {
-                savedColors = [tempColor, ...savedColors.filter(c => c !== tempColor)].slice(0, 3);
-                try { localStorage.setItem(SAVED_KEY, JSON.stringify(savedColors)); } catch (e) {}
-            }
-            closeColorModal();
-        }
-        function pickColor(hex) { tempColor = hex; customTouched = false; updateModalSamples(hex); }
-        function switchToCustom() { getEl('palette-view').style.display = 'none'; getEl('hsv-view').style.display = 'flex'; getEl('custom-link').style.visibility = 'hidden'; }
-        function switchToPalette() { getEl('hsv-view').style.display = 'none'; getEl('palette-view').style.display = 'block'; getEl('custom-link').style.visibility = 'visible'; }
-        function updateModalSamples(hex) { setSwatch(getEl('modal-color-sample'), hex); setSwatch(getEl('modal-color-sample-hsv'), hex); }
-
-        function hsvToHex(h, s, v) {
-            s /= 100; v /= 100;
-            let c = v * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = v - c;
-            let r = 0, g = 0, b = 0;
-            if (0 <= h && h < 60) { r = c; g = x; b = 0; }
-            else if (60 <= h && h < 120) { r = x; g = c; b = 0; }
-            else if (120 <= h && h < 180) { r = 0; g = c; b = x; }
-            else if (180 <= h && h < 240) { r = 0; g = x; b = c; }
-            else if (240 <= h && h < 300) { r = x; g = 0; b = c; }
-            else if (300 <= h && h < 360) { r = c; g = 0; b = x; }
-            r = Math.round((r + m) * 255).toString(16).padStart(2, '0');
-            g = Math.round((g + m) * 255).toString(16).padStart(2, '0');
-            b = Math.round((b + m) * 255).toString(16).padStart(2, '0');
-            return `#${r}${g}${b}`;
-        }
-
-        function updateFromHSV() {
-            customTouched = true;
-            tempColor = hsvToHex(parseInt(getEl('hsv-hue').value), parseInt(getEl('hsv-sat').value), parseInt(getEl('hsv-val').value));
-            updateModalSamples(tempColor);
-        }
-
-        // ---------- Pełny ekran, ekran stale włączony, przyciski ----------
-        function toggleFullscreen() {
-            if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
-            else if (document.exitFullscreen) document.exitFullscreen();
-        }
-
-        // Ekran stale włączony (Wake Lock) – tylko mobilnie i tylko w trybie pełnego ekranu
-        let wakeLock = null;
-
-        function updateWakeItem() {
-            const show = !!document.fullscreenElement && window.matchMedia('(pointer: coarse)').matches && 'wakeLock' in navigator;
-            getEl('screen-controls').classList.toggle('wake-on', show);
-        }
-
-        async function applyWakeLock() {
-            const want = getEl('wake-check').checked && !!document.fullscreenElement && getEl('display-screen').style.display === 'flex' && 'wakeLock' in navigator;
-            if (want) {
-                if (!wakeLock) {
-                    try {
-                        wakeLock = await navigator.wakeLock.request('screen');
-                        wakeLock.addEventListener('release', () => { wakeLock = null; });
-                    } catch (e) { wakeLock = null; }
-                }
-            } else if (wakeLock) {
-                try { await wakeLock.release(); } catch (e) {}
-                wakeLock = null;
-            }
-        }
-
-        function onWakeToggle() {
-            applyWakeLock();
-            startControlsTimer(10000);
-        }
-
-        document.addEventListener('fullscreenchange', () => { updateWakeItem(); applyWakeLock(); });
-        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') applyWakeLock(); });
-
-        function startControlsTimer(duration) {
-            clearTimeout(hideControlsTimer);
-            hideControlsTimer = setTimeout(() => {
-                getEl('screen-controls').classList.add('collapsed');
-                getEl('arrow-toggle-btn').textContent = '‹';
-            }, duration);
-        }
-
-        function toggleControls() {
-            const controls = getEl('screen-controls');
-            const arrow = getEl('arrow-toggle-btn');
-            if (controls.classList.contains('collapsed')) {
-                controls.classList.remove('collapsed');
-                arrow.textContent = '›';
-                startControlsTimer(10000);
-            } else {
-                controls.classList.add('collapsed');
-                arrow.textContent = '‹';
-                clearTimeout(hideControlsTimer);
-            }
-        }
-
-        // ---------- Stan ustawień, Zapisz / Wczytaj ----------
-        function getState() {
-            return {
-                bgColor: document.querySelector('input[name="bg-color"]:checked').value,
-                size: getEl('size-slider').value,
-                type: document.querySelector('input[name="clock-type"]:checked').value,
-                roman: roman,
-                showDate: getEl('show-date').checked,
-                showSeconds: getEl('show-seconds').checked,
-                blink: getEl('blink-on').checked,
-                speed: getEl('speed-slider').value,
-                autoContrast: getEl('auto-contrast-color').checked,
-                confirmedColor: confirmedColor,
-                animGradient: getEl('anim-gradient').checked,
-                animGradIdx: animGradIdx,
-                brightness: getEl('bright-slider').value
-            };
-        }
-
-        function applyState(c) {
-            c = Object.assign({}, DEFAULTS, c);
-            document.querySelector(`input[name="bg-color"][value="${c.bgColor === 'white' ? 'white' : 'black'}"]`).checked = true;
-            document.querySelector(`input[name="clock-type"][value="${c.type === 'analog' ? 'analog' : 'digital'}"]`).checked = true;
-            roman = !!c.roman;
-            getEl('numeral-label').textContent = roman ? 'Cyfry rzymskie' : 'Cyfry arabskie';
-            getEl('size-slider').value = c.size;
-            getEl('show-date').checked = !!c.showDate;
-            getEl('show-seconds').checked = !!c.showSeconds;
-            getEl('blink-on').checked = !!c.blink;
-            getEl('speed-slider').value = c.speed;
-            getEl('auto-contrast-color').checked = !!c.autoContrast;
-            confirmedColor = c.confirmedColor;
-            setSwatch(getEl('color-preview-btn'), confirmedColor);
-            getEl('anim-gradient').checked = !!c.animGradient;
-            animGradIdx = c.animGradIdx || 0;
-            getEl('bright-slider').value = c.brightness;
-            onBrightChange();
-            updateTheme();
-            onTypeChange();
-            toggleBlinkOptions();
-        }
-
-        function resetSettings() { applyState(DEFAULTS); }
-
-        const SLOT_KEY = n => 'pokazzegar_slot_' + n;
-        const SLOT_SEL_KEY = 'pokazzegar_slot_sel';
-        let slotSel = 1;
-        try { slotSel = Math.min(5, Math.max(1, parseInt(localStorage.getItem(SLOT_SEL_KEY)) || 1)); } catch (e) {}
-
-        function slotData(n) {
-            try { const r = localStorage.getItem(SLOT_KEY(n)); return r ? JSON.parse(r) : null; } catch (e) { return null; }
-        }
-
-        function updateSlotUI() {
-            const b = getEl('slot-load-btn');
-            b.textContent = 'Wczytaj ' + slotSel;
-            b.classList.toggle('empty', !slotData(slotSel));
-        }
-
-        function flashBtn(id, text, restore) {
-            const b = getEl(id);
-            b.textContent = text;
-            clearTimeout(b._t);
-            b._t = setTimeout(restore, 1000);
-        }
-
-        function changeSlot(d) {
-            slotSel = ((slotSel - 1 + d + 5) % 5) + 1;
-            try { localStorage.setItem(SLOT_SEL_KEY, String(slotSel)); } catch (e) {}
-            updateSlotUI();
-        }
-
-        function saveSlot() {
-            try { localStorage.setItem(SLOT_KEY(slotSel), JSON.stringify(getState())); }
-            catch (e) { alert('Nie udało się zapisać – pamięć przeglądarki jest niedostępna.'); return; }
-            flashBtn('slot-save', 'Zapisano ✓', () => { getEl('slot-save').textContent = 'Zapisz'; });
-            updateSlotUI();
-        }
-
-        function loadSlot() {
-            const d = slotData(slotSel);
-            if (!d) { flashBtn('slot-load-btn', 'Pusty', updateSlotUI); return; }
-            applyState(d);
-            flashBtn('slot-load-btn', 'Wczytano ✓', updateSlotUI);
-        }
-
-        // ---------- Wyświetlanie zegara ----------
-        function showClock() {
-            const bg = document.querySelector('input[name="bg-color"]:checked').value;
-            getEl('display-screen').className = 'bg-' + bg;
-            getEl('display-screen').style.display = 'flex';
-            rebuildDisplay();
-            syncDispControls();
-            applyBrightness();
-
-            const left = getEl('screen-controls-left');
-            left.classList.remove('collapsed');
-            getEl('arrow-toggle-left').textContent = '‹';
-            startLeftTimer(5000);
-
-            const controls = getEl('screen-controls');
-            controls.classList.remove('collapsed');
-            getEl('arrow-toggle-btn').textContent = '›';
-            startControlsTimer(5000);
-        }
-
-        function hideClock() {
-            clearTimeout(hideControlsTimer);
-            clearTimeout(hideLeftTimer);
-            getEl('display-screen').style.display = 'none';
-            displayUpd = null;
-            getEl('display-root').innerHTML = '';
-            applyWakeLock();
-            if (document.fullscreenElement) document.exitFullscreen().catch(()=>{});
-        }
-
-        document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') {
-                if (getEl('color-modal-overlay').style.display === 'flex') closeColorModal();
-                else hideClock();
-            }
-            // Enter (tylko PC) = "POKAŻ ZEGAR"
-            else if (e.key === 'Enter' && !window.matchMedia('(pointer: coarse)').matches) {
-                const tag = e.target.tagName;
-                if (tag === 'TEXTAREA' || tag === 'BUTTON' || tag === 'SELECT') return;
-                if (getEl('color-modal-overlay').style.display === 'flex' || getEl('display-screen').style.display === 'flex') return;
-                e.preventDefault();
-                showClock();
-            }
-        });
-
-        // Ostrzeżenie o epilepsji na przemian z przyciskiem do PokażNapis (co 5 s)
-        setInterval(() => {
-            getEl('warn-a').classList.toggle('show');
-            getEl('warn-b').classList.toggle('show');
-        }, 5000);
-
-        // Odświeżanie podglądu przy każdej zmianie ustawień i zmianie rozmiaru okna
-        getEl('main-container').addEventListener('input', schedulePreview);
-        getEl('main-container').addEventListener('change', schedulePreview);
-        window.addEventListener('resize', () => {
-            schedulePreview();
-            if (getEl('display-screen').style.display === 'flex') rebuildDisplay();
-        });
-
-        // Start: ustawienia domyślne, potem automatyczne wczytanie wybranego zapisu
-        applyState(DEFAULTS);
-        const startData = slotData(slotSel);
-        if (startData) applyState(startData);
-        updateSlotUI();
-        refreshPreview();
-    </script>
-</body>
-</html>
+            getEl('d-oled').checked = getEl('oled-shift').
